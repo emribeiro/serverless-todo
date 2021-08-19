@@ -1,0 +1,56 @@
+service:
+  name: "todos"
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+  - serverless-dynamodb-local
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+  dynamodb:
+    stages:
+      - dev
+      - local
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true
+
+functions:
+  createTodo:
+    handler: src/functions/createTodo.handle
+    events:
+      - http:
+          path: /todos/{userid}
+          method: POST
+          cors: true
+  getUserTodos:
+    handler: src/functions/getUserTodo.handle
+    events:
+      - http:
+          path: /todos/{userid}
+          method: GET
+          cors: true
+
+resources:
+  Resources:
+    dbServerlessTodo:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: todos
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema: 
+          - AttributeName: id
+            KeyType: HASH
